@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Algeria Cyber Shield 🇩🇿</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{--g:#00c04b;--r:#e8001e;--gd:rgba(0,192,75,.07);--rd:rgba(232,0,30,.06);--bg:#000;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--g);}
+html{font-size:16px;}
+body{min-height:100vh;background:var(--bg);font-family:'Cairo','Share Tech Mono',monospace;color:var(--g);overflow-x:hidden;cursor:crosshair;}
+
+/* SCANLINES */
+body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);
+  animation:scanMove 9s linear infinite;}
+@keyframes scanMove{to{background-position:0 80px;}}
+
+/* DZ FLAG GRID */
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.grid-bg::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(0,192,75,.08) 0%,rgba(0,192,75,.03) 33%,rgba(255,255,255,.018) 33%,rgba(255,255,255,.01) 50%,rgba(232,0,30,.03) 50%,rgba(232,0,30,.08) 100%);}
+.grid-bg::after{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(var(--gd) 1px,transparent 1px),linear-gradient(90deg,var(--gd) 1px,transparent 1px),linear-gradient(var(--rd) 1px,transparent 1px),linear-gradient(90deg,var(--rd) 1px,transparent 1px);
+  background-size:48px 48px,48px 48px,78px 78px,78px 78px;background-position:0 0,0 0,24px 24px,24px 24px;animation:gPulse 7s ease-in-out infinite;}
+@keyframes gPulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+.sweep{position:fixed;left:0;right:0;height:2px;z-index:5;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--g),var(--r),transparent);opacity:.35;animation:sweepDown 8s linear infinite;}
+@keyframes sweepDown{0%{top:-2px}100%{top:100vh}}
+
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.pt{position:absolute;border-radius:50%;opacity:0;animation:ptUp linear infinite;}
+@keyframes ptUp{0%{transform:translateY(100vh);opacity:0}8%{opacity:.85}92%{opacity:.85}100%{transform:translateY(-8vh) translateX(10px);opacity:0}}
+
+.corner{position:fixed;width:58px;height:58px;z-index:10;pointer-events:none;}
+.c-tl{top:0;left:0;border-top:2px solid var(--g);border-left:2px solid var(--g);}
+.c-tr{top:0;right:0;border-top:2px solid var(--r);border-right:2px solid var(--r);}
+.c-bl{bottom:0;left:0;border-bottom:2px solid var(--r);border-left:2px solid var(--r);}
+.c-br{bottom:0;right:0;border-bottom:2px solid var(--g);border-right:2px solid var(--g);}
+
+/* STATUS BAR */
+.sbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;
+  padding:6px 14px;background:rgba(0,0,0,.95);border-bottom:1px solid var(--g);
+  font-size:.55rem;letter-spacing:.11em;direction:ltr;transition:border-color .5s;}
+.sdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g);margin-right:5px;animation:blink 1.2s step-start infinite;}
+.fstrip{display:inline-flex;height:8px;width:18px;border-radius:1px;overflow:hidden;border:1px solid rgba(255,255,255,.15);vertical-align:middle;margin-right:4px;}
+.fs-g{flex:1;background:#00784a;}.fs-w{flex:1;background:#fff;}.fs-r{width:4px;background:#d21034;}
+.badge{font-size:.44rem;border:1px solid rgba(0,192,75,.4);color:rgba(0,192,75,.7);padding:1px 5px;letter-spacing:.1em;}
+
+@keyframes blink{50%{opacity:0}}
+@keyframes fup{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes tpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3) drop-shadow(0 0 12px currentColor)}}
+@keyframes pflash{0%,94%,100%{opacity:1}95%{opacity:.3;letter-spacing:.55em;color:var(--g)}96%{opacity:1}}
+
+/* NEON THEMES */
+body.ng .main-title{text-shadow:0 0 7px var(--g),0 0 20px var(--g),0 0 48px rgba(0,192,75,.38);}
+body.nr .main-title{text-shadow:0 0 7px var(--r),0 0 20px var(--r),0 0 48px rgba(232,0,30,.42);}
+body.nr{color:var(--r);}
+body.nr .sbar,body.nr .terminal{border-color:var(--r);}
+body.nr .c-tl,body.nr .c-br{border-color:var(--r);}
+body.nr .div-line{background:linear-gradient(90deg,transparent,var(--r),transparent)!important;}
+body.nr .sweep{background:linear-gradient(90deg,transparent,var(--r),transparent);}
+body.nr .psec{border-color:var(--r);}
+body.nr .psec::before{color:var(--r);}
+body.nr #pout{color:var(--r);text-shadow:0 0 10px var(--r);}
+body.nr .xbtn{border-color:var(--r);color:var(--r);}
+body.nr .xbtn::before{background:var(--r);}
+body.nr .fin:focus{border-color:var(--r);box-shadow:0 0 10px rgba(232,0,30,.18);}
+body.nr .nbtn:not(.red){border-color:var(--r);color:var(--r);}
+body.nr .nbtn:not(.red)::before{background:var(--r);}
+body.nr .vlbtn{border-color:var(--r);color:var(--r);}
+body.nr .vlbtn::before{background:var(--r);}
+
+/* WRAPPER */
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 16px 128px;gap:17px;}
+
+/* TITLE */
+.tblock{text-align:center;animation:fup 1.1s cubic-bezier(.16,1,.3,1) .3s both;}
+.prelabel{font-size:.53rem;letter-spacing:.32em;color:var(--r);text-transform:uppercase;margin-bottom:8px;direction:ltr;animation:pflash 5s steps(1) infinite;}
+.main-title{font-family:'Cairo','Orbitron',sans-serif;font-weight:900;font-size:clamp(1.35rem,4.8vw,3.6rem);line-height:1.15;text-align:center;color:#fff;position:relative;animation:tpulse 3s ease-in-out infinite;}
+.main-title::before,.main-title::after{content:attr(data-text);position:absolute;top:0;left:0;right:0;overflow:hidden;pointer-events:none;}
+.main-title::before{color:var(--r);animation:g1 6s infinite;clip-path:polygon(0 0,100% 0,100% 36%,0 36%);}
+.main-title::after{color:var(--g);animation:g2 6s infinite;clip-path:polygon(0 63%,100% 63%,100% 100%,0 100%);}
+@keyframes g1{0%,91%,100%{transform:none;opacity:0}92%{transform:translate(-4px,2px);opacity:.8}93%{transform:translate(4px,-2px);opacity:0}95%{transform:translate(-2px,0);opacity:.6}96%{transform:none;opacity:0}}
+@keyframes g2{0%,87%,100%{transform:none;opacity:0}88%{transform:translate(4px,-3px);opacity:.7}89%{transform:translate(-4px,3px);opacity:0}91%{transform:translate(2px,0);opacity:.5}92%{transform:none;opacity:0}}
+.ten{font-family:'Orbitron',sans-serif;font-size:clamp(.62rem,1.7vw,1.05rem);font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.4);display:block;margin-top:4px;text-shadow:0 0 8px var(--r);}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:8px;width:min(510px,92vw);direction:ltr;animation:fup 1s ease .6s both;}
+.div-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);}
+.dg{color:var(--g);font-size:.82rem;animation:spin 5s linear infinite;}
+.dr{color:var(--r);font-size:.82rem;animation:spin 5s linear infinite;}
+
+.sub{font-size:clamp(.56rem,1.6vw,.76rem);letter-spacing:.18em;color:rgba(255,255,255,.42);text-align:center;text-transform:uppercase;direction:ltr;animation:fup 1s ease .75s both;}
+
+/* NAV */
+.ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:7px;width:min(600px,92vw);animation:fup 1s ease 1s both;}
+.nbtn{padding:10px 6px;background:transparent;border:1px solid var(--g);color:var(--g);font-family:'Cairo','Share Tech Mono',monospace;font-size:.63rem;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:color .3s;}
+.nbtn::before{content:'';position:absolute;inset:0;background:var(--g);transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.16,1,.3,1);z-index:0;}
+.nbtn span{position:relative;z-index:1;}
+.nbtn:hover{color:#000;}.nbtn:hover::before{transform:scaleX(1);}
+.nbtn.red{border-color:var(--r);color:var(--r);}.nbtn.red::before{background:var(--r);}
+
+/* ══ VAULT / PASSWORD SECTION ══ */
+.psec{width:min(570px,92vw);border:1px solid var(--g);padding:18px 16px;position:relative;animation:fup 1s ease 1.05s both;background:rgba(0,192,75,.015);transition:border-color .5s;}
+.psec::before{content:'[ VAULT · AES-256 · SHA-256 · CLIENT-SIDE ]';position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#000;padding:0 8px;font-size:.43rem;letter-spacing:.11em;color:var(--g);white-space:nowrap;transition:color .5s;}
+
+/* CRYPTO INFO */
+.cinfo{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:5px 8px;border:1px solid rgba(0,192,75,.18);background:rgba(0,192,75,.03);font-size:.46rem;letter-spacing:.09em;color:rgba(0,192,75,.55);direction:ltr;}
+.ci{display:flex;align-items:center;gap:3px;}
+.cdot{width:4px;height:4px;border-radius:50%;background:var(--g);animation:blink 1.6s step-start infinite;}
+.cdot.r{background:var(--r);animation-delay:.5s;}
+
+.ilabel{font-size:.54rem;letter-spacing:.12em;color:rgba(255,255,255,.38);margin-bottom:5px;display:block;text-align:center;}
+
+/* INPUT ROW */
+.irow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;}
+.igroup{display:flex;flex-direction:column;}
+.igroup .ilabel{text-align:right;font-size:.5rem;margin-bottom:4px;}
+
+.fin{width:100%;background:rgba(0,0,0,.78);border:1px solid rgba(0,192,75,.28);color:var(--g);font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.07em;padding:10px 11px;outline:none;transition:border-color .3s,box-shadow .3s;text-align:center;direction:ltr;border-radius:0;-webkit-appearance:none;}
+.fin::placeholder{color:rgba(0,192,75,.22);}
+.fin:focus{border-color:var(--g);box-shadow:0 0 9px rgba(0,192,75,.16);}
+
+.xbtn{width:100%;margin-top:10px;padding:13px;background:transparent;border:1px solid var(--g);color:var(--g);font-family:'Cairo','Orbitron',monospace;font-size:.76rem;font-weight:700;letter-spacing:.17em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:color .3s;-webkit-appearance:none;}
+.xbtn::before{content:'';position:absolute;inset:0;background:var(--g);transform:scaleY(0);transform-origin:bottom;transition:transform .36s cubic-bezier(.16,1,.3,1);z-index:0;}
+.xbtn span{position:relative;z-index:1;}
+.xbtn:hover{color:#000;}.xbtn:hover::before{transform:scaleY(1);}
+.xbtn:active{transform:scale(.98);}
+
+/* PROCESSING */
+.proc{display:none;text-align:center;padding:9px;font-size:.58rem;letter-spacing:.18em;color:var(--g);direction:ltr;}
+.pdots span{animation:blink .8s step-start infinite;}
+.pdots span:nth-child(2){animation-delay:.27s;}
+.pdots span:nth-child(3){animation-delay:.54s;}
+
+.pwrap{margin-top:11px;display:none;}
+.plabel{font-size:.46rem;letter-spacing:.16em;color:rgba(255,255,255,.32);text-align:center;margin-bottom:6px;direction:ltr;}
+
+/* ACCOUNT BADGE */
+.acc-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:7px;padding:5px 10px;border:1px solid rgba(0,192,75,.25);direction:ltr;}
+.acc-icon{font-size:.9rem;}
+.acc-name{font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;color:var(--g);letter-spacing:.15em;text-transform:uppercase;}
+.acc-label{font-size:.44rem;color:rgba(255,255,255,.3);letter-spacing:.12em;}
+
+/* HASH */
+.hdisp{margin-bottom:7px;padding:5px 10px;background:rgba(0,0,0,.55);border-left:2px solid var(--g);direction:ltr;}
+.hl{font-size:.4rem;letter-spacing:.13em;color:rgba(255,255,255,.28);margin-bottom:2px;}
+.hv{font-family:'Share Tech Mono',monospace;font-size:.46rem;color:rgba(0,192,75,.45);word-break:break-all;letter-spacing:.04em;}
+
+#pout{display:block;width:100%;background:transparent;border:none;outline:none;resize:none;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:clamp(.74rem,2.1vw,.95rem);font-weight:700;letter-spacing:.09em;padding:10px 11px;text-align:center;direction:ltr;word-break:break-all;text-shadow:0 0 10px var(--g);cursor:pointer;transition:color .5s,text-shadow .5s;}
+
+.sbars{margin-top:6px;display:flex;gap:3px;justify-content:center;}
+.sbar{height:3px;flex:1;max-width:38px;background:rgba(255,255,255,.08);border-radius:2px;transition:background .4s;}
+.sg{background:var(--g)!important;}.sr{background:var(--r)!important;}
+.chint{font-size:.44rem;color:rgba(255,255,255,.24);text-align:center;margin-top:5px;letter-spacing:.12em;direction:ltr;}
+
+/* VIEW LOGS BTN */
+.vlbtn{width:min(570px,92vw);padding:11px;background:transparent;border:1px solid var(--g);color:var(--g);font-family:'Cairo','Orbitron',monospace;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:color .3s;animation:fup 1s ease 1.2s both;}
+.vlbtn::before{content:'';position:absolute;inset:0;background:var(--g);transform:scaleX(0);transform-origin:left;transition:transform .36s cubic-bezier(.16,1,.3,1);z-index:0;}
+.vlbtn span{position:relative;z-index:1;}
+.vlbtn:hover{color:#000;}.vlbtn:hover::before{transform:scaleX(1);}
+
+/* STATS */
+.stats{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;animation:fup 1s ease 1.3s both;}
+.si{text-align:center;}
+.sv{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;color:var(--r);text-shadow:0 0 10px var(--r);display:block;}
+.sl{font-size:.5rem;letter-spacing:.15em;color:rgba(255,255,255,.34);text-transform:uppercase;}
+
+/* CONTACTS */
+.contacts{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;animation:fup 1s ease 1.4s both;}
+.cbtn{display:flex;align-items:center;gap:6px;padding:9px 14px;background:transparent;font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:none;position:relative;overflow:hidden;transition:color .3s;border:1px solid;}
+.cbtn::before{content:'';position:absolute;inset:0;transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.16,1,.3,1);z-index:0;}
+.cbtn span,.cbtn svg{position:relative;z-index:1;}
+.cbtn:hover::before{transform:scaleX(1);}.cbtn:hover{color:#000;}
+.cwa{border-color:#25D366;color:#25D366;}.cwa::before{background:#25D366;}
+.ctg{border-color:#2AABEE;color:#2AABEE;}.ctg::before{background:#2AABEE;}
+.cx{border-color:#ddd;color:#ddd;}.cx::before{background:#ddd;}
+
+/* TERMINAL */
+.terminal{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(0,0,0,.96);border-top:1px solid var(--g);padding:5px 14px;font-size:.51rem;letter-spacing:.09em;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;direction:ltr;transition:border-color .5s;}
+.cur{display:inline-block;width:6px;height:9px;background:var(--g);animation:blink .8s step-start infinite;margin-right:2px;vertical-align:middle;}
+
+/* ══ MODAL ══ */
+.moverlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:14px;}
+.moverlay.open{display:flex;}
+.modal{width:min(700px,96vw);max-height:84vh;background:#000;border:1px solid var(--g);display:flex;flex-direction:column;animation:mIn .3s cubic-bezier(.16,1,.3,1) both;}
+@keyframes mIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+
+.mhdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(0,192,75,.22);direction:ltr;}
+.mtitle{font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;color:var(--g);letter-spacing:.17em;}
+.mclose{background:transparent;border:1px solid var(--r);color:var(--r);width:25px;height:25px;cursor:pointer;font-size:.82rem;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.mclose:hover{background:var(--r);color:#000;}
+
+.mact{display:flex;gap:7px;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,.05);direction:ltr;flex-wrap:wrap;align-items:center;}
+.mabtn{padding:5px 11px;background:transparent;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.42);font-family:'Share Tech Mono',monospace;font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:border-color .2s,color .2s;}
+.mabtn:hover{border-color:var(--r);color:var(--r);}
+.lcnt{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:rgba(255,255,255,.25);margin-left:auto;}
+
+.mbody{overflow-y:auto;flex:1;padding:8px 14px;direction:ltr;}
+.mbody::-webkit-scrollbar{width:3px;}
+.mbody::-webkit-scrollbar-thumb{background:var(--g);}
+
+.lempty{text-align:center;padding:32px 16px;color:rgba(255,255,255,.2);font-size:.62rem;letter-spacing:.16em;}
+
+/* VAULT ENTRY */
+.litem{display:flex;align-items:stretch;gap:0;border:1px solid rgba(255,255,255,.06);margin-bottom:7px;overflow:hidden;animation:fup .3s ease both;}
+.litem:last-child{margin-bottom:0;}
+
+.laccbar{width:5px;flex-shrink:0;background:var(--g);}
+.laccbar.cr{background:var(--r);}
+
+.lbody{flex:1;padding:8px 10px;min-width:0;}
+.lacc{font-family:'Orbitron',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px;}
+.lacc.cg{color:var(--g);}.lacc.cr2{color:var(--r);}
+.lpass{font-family:'Share Tech Mono',monospace;font-size:.68rem;word-break:break-all;letter-spacing:.06em;color:rgba(255,255,255,.8);margin-bottom:3px;}
+.lmeta{font-size:.42rem;color:rgba(255,255,255,.22);letter-spacing:.08em;}
+.lseed{color:rgba(255,255,255,.18);margin-right:8px;}
+
+.lactions{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px 8px;border-left:1px solid rgba(255,255,255,.05);}
+.lcpbtn{background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.26);padding:4px 7px;font-family:'Share Tech Mono',monospace;font-size:.44rem;cursor:pointer;transition:border-color .2s,color .2s;white-space:nowrap;}
+.lcpbtn:hover{border-color:var(--g);color:var(--g);}
+.ldelbtn{background:transparent;border:1px solid rgba(232,0,30,.2);color:rgba(232,0,30,.35);padding:4px 7px;font-family:'Share Tech Mono',monospace;font-size:.44rem;cursor:pointer;transition:border-color .2s,color .2s;white-space:nowrap;}
+.ldelbtn:hover{border-color:var(--r);color:var(--r);}
+
+@media(max-width:420px){
+  .irow{grid-template-columns:1fr;}
+  .stats{gap:14px;}.sv{font-size:1.1rem;}
+  .cbtn{padding:7px 10px;font-size:.54rem;}
+  .main-title{font-size:clamp(1.2rem,4.4vw,3rem);}
+}
+</style>
+</head>
+<body class="ng">
+
+<div class="grid-bg"></div>
+<div class="sweep"></div>
+<div class="particles" id="pts"></div>
+<div class="corner c-tl"></div><div class="corner c-tr"></div>
+<div class="corner c-bl"></div><div class="corner c-br"></div>
+
+<header class="sbar">
+  <div><span class="sdot"></span>ONLINE | متصل</div>
+  <div id="clock">--:--:--</div>
+  <div><div class="fstrip"><div class="fs-g"></div><div class="fs-w"></div><div class="fs-r"></div></div> <span class="badge">AES-256</span></div>
+</header>
+
+<main class="wrap">
+
+  <div class="tblock">
+    <p class="prelabel">// Algeria Cyber Shield v4.0 · VAULT EDITION //</p>
+    <h1 class="main-title" data-text="بوابة الجزائر للسايبر Space">
+      بوابة الجزائر للسايبر Space
+      <span class="ten">ALGERIA CYBER SHIELD 🇩🇿 · VAULT</span>
+    </h1>
+  </div>
+
+  <div class="divider">
+    <div class="div-line"></div>
+    <span class="dg">◈</span>
+    <span style="color:rgba(255,255,255,.32);font-size:.78rem">☽★</span>
+    <span class="dr">◈</span>
+    <div class="div-line"></div>
+  </div>
+
+  <p class="sub">خزانة كلمات السر · PASSWORD VAULT · AES-256</p>
+
+  <nav class="ngrid">
+    <button class="nbtn"><span>▶ بداية | START</span></button>
+    <button class="nbtn red"><span>◈ حول | ABOUT</span></button>
+    <button class="nbtn"><span>⬡ خزانة | VAULT</span></button>
+    <button class="nbtn red"><span>⌬ مساعدة | HELP</span></button>
+  </nav>
+
+  <!-- VAULT SECTION -->
+  <div class="psec" id="psec">
+
+    <div class="cinfo">
+      <div class="ci"><span class="cdot"></span>SHA-256 KEY</div>
+      <div class="ci"><span class="cdot" style="animation-delay:.4s"></span>AES-256-CBC</div>
+      <div class="ci"><span class="cdot r"></span>CLIENT-SIDE · لا سيرفر</div>
+    </div>
+
+    <!-- TWO INPUTS -->
+    <div class="irow">
+      <div class="igroup">
+        <label class="ilabel" style="text-align:right">🔑 اسم التطبيق / الحساب<br><span style="direction:ltr;font-size:.42rem">Account / App Name</span></label>
+        <input type="text" id="accIn" class="fin"
+          placeholder="Gmail, Facebook ..."
+          autocomplete="off" spellcheck="false" maxlength="30" inputmode="text"/>
+      </div>
+      <div class="igroup">
+        <label class="ilabel" style="text-align:right">🔐 الـ Seed / المفتاح السري<br><span style="direction:ltr;font-size:.42rem">Secret Seed Key</span></label>
+        <input type="text" id="seedIn" class="fin"
+          placeholder="Walid · DZ2049 ..."
+          autocomplete="off" spellcheck="false" maxlength="40" inputmode="text"/>
+      </div>
+    </div>
+
+    <button class="xbtn" id="execBtn" onclick="genPass()">
+      <span>⚡ توليد وحفظ كلمة السر | GENERATE & SAVE ⚡</span>
+    </button>
+
+    <div class="proc" id="proc">
+      <span>COMPUTING SHA-256 → AES-256</span>
+      <span class="pdots"><span>.</span><span>.</span><span>.</span></span>
+    </div>
+
+    <div class="pwrap" id="pwrap">
+      <p class="plabel">// كلمة السر المولدة | GENERATED PASSWORD //</p>
+
+      <div class="acc-badge" id="accBadge">
+        <span class="acc-icon">🛡</span>
+        <div>
+          <div class="acc-name" id="accDisplay">—</div>
+          <div class="acc-label">PROTECTED ACCOUNT</div>
+        </div>
+      </div>
+
+      <div class="hdisp">
+        <div class="hl">SHA-256 DERIVED KEY (preview):</div>
+        <div class="hv" id="hashDisp">—</div>
+      </div>
+
+      <textarea id="pout" rows="2" readonly onclick="cpPass(this)" title="اضغط للنسخ / Tap to copy"></textarea>
+      <div class="sbars">
+        <div class="sbar" id="sb0"></div><div class="sbar" id="sb1"></div>
+        <div class="sbar" id="sb2"></div><div class="sbar" id="sb3"></div>
+        <div class="sbar" id="sb4"></div>
+      </div>
+      <p class="chint" id="chint">اضغط على كلمة السر لنسخها · Tap to copy</p>
+    </div>
+  </div>
+
+  <!-- VIEW LOGS -->
+  <button class="vlbtn" onclick="openLogs()">
+    <span>📂 عرض خزانة الحسابات | VIEW SYSTEM LOGS</span>
+  </button>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="si"><span class="sv" id="s1">000</span><span class="sl">مشاريع | Projects</span></div>
+    <div class="si"><span class="sv" id="s2">000</span><span class="sl">Commits</span></div>
+    <div class="si"><span class="sv" id="s3">000</span><span class="sl">نشر | Deploy</span></div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div class="contacts">
+    <a class="cbtn cwa" href="https://wa.me/213562508158" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <span>WhatsApp</span>
+    </a>
+    <a class="cbtn ctg" href="https://t.me/+213562508158" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+      <span>Telegram</span>
+    </a>
+    <a class="cbtn cx" href="https://x.com/Walid_yt_213" target="_blank" rel="noopener">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      <span>X · @Walid_yt_213</span>
+    </a>
+  </div>
+
+</main>
+
+<footer class="terminal">
+  <span>walid@dz-vault:~$ <span class="cur"></span></span>
+  <span style="color:rgba(255,255,255,.18)">© 2026 Algeria Cyber Shield · VAULT 🇩🇿</span>
+</footer>
+
+<!-- VAULT MODAL -->
+<div class="moverlay" id="moverlay" onclick="ovClick(event)">
+  <div class="modal">
+    <div class="mhdr">
+      <span class="mtitle">🛡 خزانة الحسابات | ACCOUNT VAULT</span>
+      <button class="mclose" onclick="closeLogs()">✕</button>
+    </div>
+    <div class="mact">
+      <button class="mabtn" onclick="clearLogs()">🗑 مسح الكل | CLEAR ALL</button>
+      <span class="lcnt" id="lcnt">0 accounts</span>
+    </div>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<script>
+// ── GUARD ──
+if(typeof CryptoJS==='undefined')
+  document.querySelector('.prelabel').textContent='// ⚠ CryptoJS لم يتحمل — تحقق من الإنترنت //';
+
+// ── CLOCK ──
+(function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    String(n.getHours()).padStart(2,'0')+':'+
+    String(n.getMinutes()).padStart(2,'0')+':'+
+    String(n.getSeconds()).padStart(2,'0');
+  setTimeout(tick,1000);
+})();
+
+// ── COUNT-UP ──
+function countUp(id,target,dur){
+  let v=0,el=document.getElementById(id);
+  const step=target/(dur/16),t=setInterval(()=>{
+    v+=step;
+    if(v>=target){el.textContent=String(target).padStart(3,'0');clearInterval(t);}
+    else el.textContent=String(Math.floor(v)).padStart(3,'0');
+  },16);
+}
+setTimeout(()=>countUp('s1',24,1400),1200);
+setTimeout(()=>countUp('s2',312,2000),1400);
+setTimeout(()=>countUp('s3',18,1200),1600);
+
+// ── PARTICLES ──
+(function(){
+  const c=document.getElementById('pts');
+  const cols=['#00c04b','#00c04b','#e8001e','rgba(255,255,255,.48)','#00c04b'];
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div');p.className='pt';
+    const sz=Math.random()*2.1+.7;
+    Object.assign(p.style,{left:Math.random()*100+'vw',width:sz+'px',height:sz+'px',
+      background:cols[i%cols.length],animationDuration:(Math.random()*12+8)+'s',animationDelay:(Math.random()*14)+'s'});
+    c.appendChild(p);
+  }
+})();
+
+// ══════════════════════════════════════════
+//  CRYPTO ENGINE · 100% CLIENT-SIDE
+//  Seed → SHA-256 → AES-256-CBC Key
+//  Random plaintext → AES Encrypt → Password
+// ══════════════════════════════════════════
+
+function deriveKey(seed){
+  // SHA-256 of (seed + account + salt) → 256-bit key
+  return CryptoJS.SHA256(seed).toString(CryptoJS.enc.Hex);
+}
+
+function aesEncrypt(plaintext, keyHex){
+  const key = CryptoJS.enc.Hex.parse(keyHex);
+  const iv  = CryptoJS.lib.WordArray.random(16);
+  const enc = CryptoJS.AES.encrypt(
+    CryptoJS.enc.Utf8.parse(plaintext), key,
+    {iv, mode:CryptoJS.mode.CBC, padding:CryptoJS.pad.Pkcs7}
+  );
+  return iv.toString(CryptoJS.enc.Hex) + enc.ciphertext.toString(CryptoJS.enc.Hex);
+}
+
+function hexToPass(hex, len){
+  const UP='ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const LW='abcdefghjkmnpqrstuvwxyz';
+  const DG='0123456789';
+  const SY='@#$%&!?*+-=^~';
+  const ALL=UP+LW+DG+SY;
+  let r='';
+  for(let i=0;i<len&&i*2+1<hex.length;i++) r+=ALL[parseInt(hex.substr(i*2,2),16)%ALL.length];
+  r=r.split('');
+  // Guarantee categories
+  const b=(pos)=>parseInt(hex.substr(pos*2,2),16);
+  r[0]=UP[b(0)%UP.length]; r[1]=LW[b(1)%LW.length];
+  r[2]=DG[b(2)%DG.length]; r[3]=SY[b(3)%SY.length];
+  return r.join('');
+}
+
+// ── NEON STATE ──
+let neonState='g';
+
+// ── MAIN GENERATOR ──
+function genPass(){
+  const acc  = document.getElementById('accIn').value.trim();
+  const seed = document.getElementById('seedIn').value.trim();
+
+  // Validate both inputs
+  let err=false;
+  [['accIn',acc],['seedIn',seed]].forEach(([id,v])=>{
+    if(!v){ const el=document.getElementById(id);
+      el.style.boxShadow='0 0 12px rgba(232,0,30,.65)';
+      el.style.borderColor='#e8001e';
+      setTimeout(()=>{el.style.boxShadow='';el.style.borderColor='';},1200);
+      err=true; }
+  });
+  if(err) return;
+  if(typeof CryptoJS==='undefined'){alert('CryptoJS not loaded');return;}
+
+  // Show processing
+  const proc=document.getElementById('proc');
+  const btn=document.getElementById('execBtn');
+  proc.style.display='block'; btn.disabled=true; btn.style.opacity='.5';
+
+  setTimeout(()=>{
+    // ── CRYPTO PIPELINE ──
+    // 1. Derive key: SHA-256(seed + "|" + account + "|DZ|" + timestamp)
+    const keyInput = seed + '|' + acc + '|DZ-Vault|' + Date.now();
+    const aesKey   = deriveKey(keyInput);
+
+    // 2. Random 32-byte plaintext
+    const plain = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex);
+
+    // 3. AES-256-CBC encrypt
+    const cipherHex = aesEncrypt(plain, aesKey);
+
+    // 4. Map cipher → readable password
+    const passLen = 20 + (parseInt(aesKey.substr(0,2),16) % 4);
+    const pass    = hexToPass(cipherHex, passLen);
+    // ─────────────────────
+
+    proc.style.display='none'; btn.disabled=false; btn.style.opacity='1';
+
+    // Update UI
+    document.getElementById('accDisplay').textContent = acc.toUpperCase();
+    document.getElementById('hashDisp').textContent   = aesKey.substring(0,32)+'...';
+
+    const wrap=document.getElementById('pwrap');
+    const out=document.getElementById('pout');
+    wrap.style.display='block'; out.value='';
+    let i=0; const t=setInterval(()=>{out.value+=pass[i++];if(i>=pass.length)clearInterval(t);},26);
+
+    // Toggle neon
+    neonState=neonState==='g'?'r':'g';
+    document.body.classList.toggle('ng',neonState==='g');
+    document.body.classList.toggle('nr',neonState==='r');
+
+    // Strength bars
+    ['sg','sg','sr','sg','sr'].forEach((cl,i)=>{
+      const b=document.getElementById('sb'+i); b.className='sbar';
+      setTimeout(()=>b.classList.add(cl),i*100+280);
+    });
+
+    document.getElementById('chint').textContent='اضغط على كلمة السر لنسخها · Tap to copy';
+
+    // Save to vault
+    saveEntry(pass, seed, acc, neonState, aesKey.substring(0,16)+'...');
+
+  }, 380);
+}
+
+function cpPass(el){
+  const v=el?el.value:document.getElementById('pout').value;
+  if(!v) return;
+  const h=document.getElementById('chint');
+  navigator.clipboard.writeText(v).then(()=>{
+    h.textContent='✔ تم النسخ! | Copied!';
+    setTimeout(()=>h.textContent='اضغط على كلمة السر لنسخها · Tap to copy',2000);
+  }).catch(()=>{try{el.select();document.execCommand('copy');}catch(e){}});
+}
+
+['accIn','seedIn'].forEach(id=>{
+  document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')genPass();});
+});
+
+// ══ VAULT STORAGE ══
+const VKEY='acs_vault_v4';
+function getVault(){try{return JSON.parse(localStorage.getItem(VKEY)||'[]');}catch{return[];}}
+
+function saveEntry(pass,seed,acc,col,keyHash){
+  const vault=getVault();
+  const n=new Date();
+  vault.unshift({
+    id:Date.now(), pass, seed, acc, col, keyHash,
+    date:n.toLocaleDateString('fr-DZ'),
+    time:n.toLocaleTimeString('fr-DZ',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+  });
+  if(vault.length>200) vault.pop();
+  localStorage.setItem(VKEY,JSON.stringify(vault));
+}
+
+function deleteEntry(id){
+  let vault=getVault().filter(e=>e.id!==id);
+  localStorage.setItem(VKEY,JSON.stringify(vault));
+  openLogs();
+}
+
+// ══ MODAL ══
+function openLogs(){
+  const vault=getVault();
+  const body=document.getElementById('mbody');
+  document.getElementById('lcnt').textContent=vault.length+' account'+(vault.length!==1?'s':'');
+  body.innerHTML=!vault.length
+    ? '<p class="lempty">الخزانة فارغة · Vault is empty<br><br>// NO ENTRIES YET //</p>'
+    : vault.map((e,i)=>`
+      <div class="litem" style="animation-delay:${i*0.04}s">
+        <div class="laccbar ${e.col==='r'?'cr':''}"></div>
+        <div class="lbody">
+          <div class="lacc ${e.col==='r'?'cr2':'cg'}">
+            🔑 ${eh(e.acc)}
+          </div>
+          <div class="lpass">${eh(e.pass)}</div>
+          <div class="lmeta">
+            <span class="lseed">seed: ${eh(e.seed)}</span>
+            <span>KEY: ${eh(e.keyHash||'—')}</span>
+            &nbsp;·&nbsp;${e.date} ${e.time}
+          </div>
+        </div>
+        <div class="lactions">
+          <button class="lcpbtn" onclick="cpEntry('${eh(e.pass)}',this)">COPY</button>
+          <button class="ldelbtn" onclick="deleteEntry(${e.id})">DEL</button>
+        </div>
+      </div>`).join('');
+  document.getElementById('moverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeLogs(){document.getElementById('moverlay').classList.remove('open');document.body.style.overflow='';}
+function ovClick(e){if(e.target===document.getElementById('moverlay'))closeLogs();}
+function clearLogs(){if(!confirm('مسح كامل الخزانة؟\nClear entire vault?'))return;localStorage.removeItem(VKEY);openLogs();}
+
+function cpEntry(pass,btn){
+  navigator.clipboard.writeText(pass).then(()=>{
+    const o=btn.textContent; btn.textContent='✔'; btn.style.borderColor='var(--g)'; btn.style.color='var(--g)';
+    setTimeout(()=>{btn.textContent=o;btn.style.borderColor='';btn.style.color='';},1800);
+  }).catch(()=>{});
+}
+
+function eh(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLogs();});
+</script>
+</body>
+</html>
+<div style="text-align: center; margin-top: 20px;">
+    <img src="icon.png" alt="Algeria Cyber Shield Logo" style="width: 150px; height: auto;">
+</div>
+
